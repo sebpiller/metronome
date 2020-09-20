@@ -6,10 +6,10 @@ import org.junit.Test;
 
 public class TicTacTest {
     @Test
-    public void xxx() {
+    public void tictacTest() {
         SmartLampFacade lampF = new LukeRobertsLampF();
 
-        TicTac ticTac = new TicTabBuilder().withListener(ticOrTac -> {
+        TicTac.BeatListener beatListener = ticOrTac -> {
             if (ticOrTac) {
                 lampF.fadeBrightnessFromTo((byte) 100, (byte) 0, SmartLampFacade.FadeStyle.FAST);
             } else {
@@ -17,7 +17,12 @@ public class TicTacTest {
             }
 
             return false;
-        }).build();
+        };
+        TicTac ticTac = new TicTabBuilder()
+
+               // .withListener(beatListener)
+                .build()
+                ;
 
         // wait for data processing...
         while (true) {

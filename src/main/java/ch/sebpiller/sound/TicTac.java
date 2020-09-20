@@ -1,5 +1,8 @@
 package ch.sebpiller.sound;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Tic-tac call a method at each beat of tempo of an input audio stream (beat detection + timer). It is more or less a metronom :).
  * <p>
@@ -7,6 +10,7 @@ package ch.sebpiller.sound;
  * here. So you can define a "frame skip" policy: <TBD/>.
  */
 public class TicTac {
+    private static final Logger LOG = LoggerFactory.getLogger(TicTac.class);
     private BpmFinder connectedBpm;
     // TODO convert to a list one day
     private BeatListener beatListener;
@@ -66,17 +70,24 @@ public class TicTac {
                     }
                 } else {
                     // ok, then tick and wait exactly the correct amount off time
-                    referenceTimeNanos = System.nanoTime();
+                    long n = System.nanoTime();
 
                     // compute next tick nanos:
-                    long targetTimeNanos = (long) (referenceTimeNanos + (1_000_000_000 * 60d / averageBpm));
-                    bl.beat(i++ % 4 == 0);
-                    long sleepNanos = targetTimeNanos - System.nanoTime();
+                    long nanosBetweenTicks = (long) ( + (1_000_000_000 * 60d / averageBpm));
 
-                    try {
-                        sleep(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
+                    bl.beat(i++ % 4 == 0);
+
+                    long sleepNanos = n + nanosBetweenTicks - System.nanoTime();
+
+                    if(sleepNanos<0) {
+                        LOG.warn("missed tic! ({}ns)", sleepNanos);
+                        i++;
+                    } else {
+                        try {
+                            sleep(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
                     }
                 }
             }

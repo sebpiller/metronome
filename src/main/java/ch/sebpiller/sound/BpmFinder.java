@@ -31,8 +31,9 @@ public class BpmFinder implements AudioListener {
         AudioFormat format = audioInput.getFormat();
         beatDetect = new BeatDetect(format.getFrameSize(), format.getSampleRate());
         beatDetect.detectMode(BeatDetect.SOUND_ENERGY/**//*FREQ_ENERGY*/);
-        beatDetect.setSensitivity(300);
+        //beatDetect.setSensitivity(300);
         audioInput.addListener(this);
+        //audioInput.setVolume(100);
     }
 
     @Override
@@ -52,7 +53,7 @@ public class BpmFinder implements AudioListener {
             long l = System.nanoTime();
 
             if (lastBeatNanoTime != 0) {
-                float detectedBpm = (float) (((60d * 1_000_000d * 1_000)) / (l - lastBeatNanoTime));
+                float detectedBpm = (float) (((60d * 1_000_000 * 1_000)) / (l - lastBeatNanoTime));
 
                 if (detectedBpm > 100 && detectedBpm < 160) {
                     synchronized (mostRecentDetectedBpms) {
