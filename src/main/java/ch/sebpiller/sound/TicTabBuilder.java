@@ -26,8 +26,8 @@ public class TicTabBuilder {
         private static final Logger LOG = LoggerFactory.getLogger(LogBeatListener.class);
 
         @Override
-        public boolean beat(boolean ticOrTac) {
-            LOG.info("{}", ticOrTac ? "tic" : "tac");
+        public boolean beat(boolean ticOrTac, float bpm) {
+            LOG.info("{} at {}", ticOrTac ? "tac" : "tic", bpm);
             return false;
         }
     }

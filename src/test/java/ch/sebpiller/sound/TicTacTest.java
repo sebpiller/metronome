@@ -9,7 +9,7 @@ public class TicTacTest {
     public void tictacTest() {
         SmartLampFacade lampF = new LukeRobertsLampF();
 
-        TicTac.BeatListener beatListener = ticOrTac -> {
+        TicTac.BeatListener beatListener = (ticOrTac, bpm) -> {
             if (ticOrTac) {
                 lampF.fadeBrightnessFromTo((byte) 100, (byte) 0, SmartLampFacade.FadeStyle.FAST);
             } else {

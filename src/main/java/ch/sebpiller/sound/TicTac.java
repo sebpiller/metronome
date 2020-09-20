@@ -12,17 +12,11 @@ import org.slf4j.LoggerFactory;
 public class TicTac {
     private static final Logger LOG = LoggerFactory.getLogger(TicTac.class);
     private BpmFinder connectedBpm;
-    // TODO convert to a list one day
-    private BeatListener beatListener;
 
     public TicTac(BpmFinder connectedBpm, BeatListener beatListener) {
         this.connectedBpm = connectedBpm;
         NotificationThread nt = new NotificationThread(connectedBpm, beatListener);
         nt.start();
-    }
-
-    public void addListener() {
-        this.beatListener = beatListener;
     }
 
     /**
@@ -34,7 +28,7 @@ public class TicTac {
          * @param ticOrTac tac(true) indicates the beginning of a measure, tic(false) indicates a regular beat. They
          *                 follow a pattern like TAC-tic-tic-tic-TAC-tic-tic-tic-TAC...
          */
-        boolean beat(boolean ticOrTac);
+        boolean beat(boolean ticOrTac, float bpm);
     }
 
     private static class NotificationThread extends Thread {
@@ -64,7 +58,7 @@ public class TicTac {
                 if (averageBpm <= 0) {
                     // no data... wait and retry
                     try {
-                        sleep(10);
+                        sleep(1000);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                     }
@@ -75,7 +69,7 @@ public class TicTac {
                     // compute next tick nanos:
                     long nanosBetweenTicks = (long) ( + (1_000_000_000 * 60d / averageBpm));
 
-                    bl.beat(i++ % 4 == 0);
+                    bl.beat(i++ % 4 == 0, (float) averageBpm);
 
                     long sleepNanos = n + nanosBetweenTicks - System.nanoTime();
 

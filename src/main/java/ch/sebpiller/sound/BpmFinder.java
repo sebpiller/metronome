@@ -31,7 +31,7 @@ public class BpmFinder implements AudioListener {
         AudioFormat format = audioInput.getFormat();
         beatDetect = new BeatDetect(format.getFrameSize(), format.getSampleRate());
         beatDetect.detectMode(BeatDetect.SOUND_ENERGY/**//*FREQ_ENERGY*/);
-        //beatDetect.setSensitivity(300);
+        beatDetect.setSensitivity(300);
         audioInput.addListener(this);
         //audioInput.setVolume(100);
     }
@@ -66,9 +66,9 @@ public class BpmFinder implements AudioListener {
         }
     }
 
-    public double getAverageBpm() {
+    public float getAverageBpm() {
         synchronized (mostRecentDetectedBpms) {
-            double average = mostRecentDetectedBpms.stream().mapToDouble((x) -> x).summaryStatistics().getAverage();
+            float average = (float) mostRecentDetectedBpms.stream().mapToDouble((x) -> x).summaryStatistics().getAverage();
             return average;
         }
     }
