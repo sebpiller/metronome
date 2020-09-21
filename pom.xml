@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ch.sebpiller</groupId>
-    <artifactId>jtictac</artifactId>
+    <artifactId>metronom</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <properties>
@@ -15,18 +15,6 @@
 
         <minim.version>2.2.2</minim.version>
     </properties>
-
-    <profiles>
-        <profile>
-            <id>spiller</id>
-            <activation>
-                <activeByDefault>false</activeByDefault>
-            </activation>
-            <properties>
-                <minim.version>2.3.0-SNAPSHOT</minim.version>
-            </properties>
-        </profile>
-    </profiles>
 
     <dependencies>
         <dependency>
@@ -65,7 +53,6 @@
             <version>1.2.3</version>
             <scope>test</scope>
         </dependency>
-
 
         <dependency>
             <groupId>org.slf4j</groupId>

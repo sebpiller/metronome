@@ -25,7 +25,7 @@ public class TicTacTest {
     // just returns bpm, but after 150ms delay
     private final BpmSource slowBpmReader = () -> {
         try {
-            Thread.sleep(150);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             // ignore
         }
@@ -44,7 +44,7 @@ public class TicTacTest {
     private long last;
 
     /* watch if tic tac does good job */
-    private final TicTac.TicTacListener GUESTAPO = (ticOrTac, expectedTempo) -> {
+    private final TicTac.TicTacListener watcher = (ticOrTac, expectedTempo) -> {
         testedTicks++;
 
         long now = System.nanoTime();
@@ -63,20 +63,17 @@ public class TicTacTest {
         }
 
         last = now;
-        return false;
     };
 
-    /* ... as a listener, guestapo can also be a disturbance. */
-    private final TicTac.TicTacListener SLOW_GUESTAPO = (ticOrTac, expectedTempo) -> {
-        GUESTAPO.beat(ticOrTac, expectedTempo);
+    private final TicTac.TicTacListener slowWatcher = (ticOrTac, expectedTempo) -> {
+        watcher.beat(ticOrTac, expectedTempo);
         try {
-            Thread.sleep(new Random().nextInt(100) + 100);
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             // ignore
         }
-        return false;
     };
-    private TicTabBuilder builder = new TicTabBuilder().withListener(GUESTAPO);
+    private TicTabBuilder builder = new TicTabBuilder().withListener(watcher);
 
     @Parameterized.Parameters
     public static Object[] getParameters() {
@@ -122,7 +119,7 @@ public class TicTacTest {
 
     @Test
     public void testSlowBpmReaderAndSlowListener() throws Exception {
-        testTicTac(builder.connectedToBpm(slowBpmReader).withListener(SLOW_GUESTAPO).build());
+        testTicTac(builder.connectedToBpm(slowBpmReader).withListener(slowWatcher).build());
     }
 
     /**
@@ -130,7 +127,12 @@ public class TicTacTest {
      * run a {@value TEST_MIN_TICKS_TO_VALIDATE} ticks.
      */
     private void testTicTac(TicTac ticTac) throws InterruptedException {
-        System.out.println("Testing tic-tac @" + bpm + "bpm...");
+        // warmup the thread...
+        System.out.println("warmup the thread...");
+        Thread.sleep(2000);
+        setUp();
+
+        System.out.println("testing tic-tac @" + bpm + "bpm...");
 
         Thread.sleep((long) ((60_000d / bpm * TEST_MIN_TICKS_TO_VALIDATE) + 2000));
         ticTac.close();

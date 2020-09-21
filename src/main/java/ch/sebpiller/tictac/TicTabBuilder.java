@@ -5,7 +5,6 @@ public class TicTabBuilder {
 
     private TicTac.TicTacListener beat = (ticOrTac, bpm) -> {
         System.out.println((ticOrTac ? "tic   @ " : "  tac @ ") + bpm);
-        return false;
     };
 
     public TicTabBuilder withListener(TicTac.TicTacListener beat) {
