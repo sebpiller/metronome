@@ -13,7 +13,7 @@ public class TicTac implements AutoCloseable {
      *
      * The objective is to gain in overall-fell precision.
      */
-    private static long __JAVA_CORRECTION_NANOS = 1_500_000;
+    private static long __JAVA_CORRECTION_NANOS = 20_200_000;
 
     private static final Logger LOG = LoggerFactory.getLogger(TicTac.class);
     private static byte id = 0; // #thread creation id
@@ -80,9 +80,6 @@ public class TicTac implements AutoCloseable {
         public void run() {
             try {
                 stopped = false;
-                int i = 0;
-
-
                 // wait data
                 do {
                     bpm = bpmSource.getBpm();
@@ -90,7 +87,7 @@ public class TicTac implements AutoCloseable {
                         sleepInterrupted(200);
                 } while (bpm <= 0);
 
-                loopUntilStopped(i);
+                loopUntilStopped();
             } finally {
                 // we are dead now, notify those waiting for it - you bastards :)
                 terminated = true;
@@ -100,14 +97,15 @@ public class TicTac implements AutoCloseable {
             }
         }
 
-        private void loopUntilStopped(int i) {
+        private void loopUntilStopped() {
             long n;
+            int i=0;
             while (!stopped) {
                 // ok, then tick and wait exactly the correct amount of time
                 n = System.nanoTime(); // memorize last boom
 
                 ///// Notify of tick
-                ticTacListener.beat(i++ % 4 != 0, (float) bpm);
+                ticTacListener.beat(i++ % 4 != 0, bpm);
 
                 // next loop bpm
                 bpm = bpmSource.getBpm();
@@ -127,6 +125,12 @@ public class TicTac implements AutoCloseable {
                         i++; // erf... let's hope we miss only one tick
                     } else {
                         sleepInterrupted(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
+                        long targetNanos = n + nanosBetweenTicks - 10_000;
+
+                        /* Just in  case this lady was really early this time...
+                           fine tuning of the slept time: just loop doing nothing until we are close from the goal */
+                        // this is where all the precision is really obtained... this wonderful, but empty loop !
+                        while(System.nanoTime()<targetNanos) /* no body here! */;
                     }
                 }
             }

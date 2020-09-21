@@ -12,8 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(Parameterized.class)
 public class TicTacTest {
-    static final float MAX_ERRORS_RATE_ALLOWED = 0.05f; // percent
-    static final int TEST_MIN_TICKS_TO_VALIDATE = 25;
+    static final float MAX_ERRORS_RATE_ALLOWED = 5 / 100f; // percent allowed of out-of-tolerance result
+    static final float BPM_TOLERANCE = 1 / 10f; // when to consider an error occurred
+    static final int TEST_MIN_TICKS_TO_VALIDATE = 50;
 
     @Parameterized.Parameter
     public int bpm = 0;
@@ -31,7 +32,7 @@ public class TicTacTest {
     // what happens with a bpm provider way too slow ?
     private final BpmSource slowAsHellBpmReader = () -> {
         try {
-            Thread.sleep(2000);
+            Thread.sleep(700);
         } catch (InterruptedException e) {
             // ignore
         }
@@ -48,10 +49,15 @@ public class TicTacTest {
         long elapsed = now - last;
         double realBpm = 60_000_000_000d / elapsed;
 
-        System.out.println((ticOrTac ? "tic   @ " : "  tac @ ") + expectedTempo + " (real " + String.format("%.2f", realBpm) + "bpm)");
+        System.out.println((ticOrTac ? "tic   @ " : "  tac @ ")+
+                "configured " +
+                String.format("%.4f", expectedTempo) +
+                " bpm, measured " +
+                String.format("%.4f", realBpm) + " bpm)");
 
         double delta = expectedTempo - realBpm;
-        if (delta > 1 || delta < -1) {
+
+        if (delta > BPM_TOLERANCE || delta < -BPM_TOLERANCE) {
             errorCount++;
         }
 
@@ -73,7 +79,7 @@ public class TicTacTest {
 
     @Parameterized.Parameters
     public static Object[] getParameters() {
-        return new Object[]{
+        return new Object[] {
                 160,
                 140,
                 120,
