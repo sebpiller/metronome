@@ -125,12 +125,11 @@ public class TicTac implements AutoCloseable {
                         i++; // erf... let's hope we miss only one tick
                     } else {
                         sleepInterrupted(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
-                        long targetNanos = n + nanosBetweenTicks - 10_000;
 
                         /* Just in  case this lady was really early this time...
                            fine tuning of the slept time: just loop doing nothing until we are close from the goal */
                         // this is where all the precision is really obtained... this wonderful, but empty loop !
-                        while(System.nanoTime()<targetNanos) /* no body here! */;
+                        while(System.nanoTime()<n + nanosBetweenTicks) /* no body here! */;
                     }
                 }
             }
