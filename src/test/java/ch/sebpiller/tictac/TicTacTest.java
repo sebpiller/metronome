@@ -49,11 +49,10 @@ public class TicTacTest {
         long elapsed = now - last;
         double realBpm = 60_000_000_000d / elapsed;
 
-        System.out.println((ticOrTac ? "tic   @ " : "  tac @ ")+
-                "configured " +
-                String.format("%.4f", expectedTempo) +
-                " bpm, measured " +
-                String.format("%.4f", realBpm) + " bpm)");
+        System.out.println(
+                (ticOrTac ? "tic   @ " : "  tac @ ")+
+                "measured " + String.format("%.4f", realBpm) + " bpm)"
+        );
 
         double delta = expectedTempo - realBpm;
 
