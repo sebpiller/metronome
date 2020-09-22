@@ -4,7 +4,7 @@
 
     <groupId>ch.sebpiller</groupId>
     <artifactId>metronom</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1-SNAPSHOT</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -18,7 +18,7 @@
         <url>scm:git:http://spidybox.home:3001/spiller/metronom.git</url>
         <connection>scm:git:http://spidybox.home:3001/spiller/metronom.git</connection>
         <developerConnection>scm:git:http://spidybox.home:3001/spiller/metronom.git</developerConnection>
-      <tag>metronom-0.1.0</tag>
+      <tag>HEAD</tag>
   </scm>
 
     <distributionManagement>
