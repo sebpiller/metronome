@@ -6,8 +6,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.util.Random;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(Parameterized.class)
@@ -52,8 +50,8 @@ public class TicTacTest {
         double realBpm = 60_000_000_000d / elapsed;
 
         System.out.println(
-                (ticOrTac ? "tic  " : "  tac")+
-                " | measured @ " + String.format("%.4f", realBpm) + " bpm"
+                (ticOrTac ? "tic  " : "  tac") +
+                        " | measured @ " + String.format("%.4f", realBpm) + " bpm"
         );
 
         double delta = expectedTempo - realBpm;
@@ -77,7 +75,7 @@ public class TicTacTest {
 
     @Parameterized.Parameters
     public static Object[] getParameters() {
-        return new Object[] {
+        return new Object[]{
                 160,
                 140,
                 120,
@@ -88,6 +86,14 @@ public class TicTacTest {
 
     @Before
     public void setUp() {
+        // warmup the thread...
+        System.out.println("warmup the thread...");
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         errorCount = -1; // the first measure is always an error, since we don't have any other beat to compute a tempo
         testedTicks = 0;
         last = 0;
@@ -127,11 +133,6 @@ public class TicTacTest {
      * run a {@value TEST_MIN_TICKS_TO_VALIDATE} ticks.
      */
     private void testTicTac(TicTac ticTac) throws InterruptedException {
-        // warmup the thread...
-        System.out.println("warmup the thread...");
-        Thread.sleep(2000);
-        setUp();
-
         System.out.println("testing tic-tac @" + bpm + "bpm...");
 
         Thread.sleep((long) ((60_000d / bpm * TEST_MIN_TICKS_TO_VALIDATE) + 2000));
@@ -145,7 +146,7 @@ public class TicTacTest {
                 .describedAs("less ticks than expected: %s received, where %s at least were expected", testedTicks, TEST_MIN_TICKS_TO_VALIDATE)
                 .isGreaterThanOrEqualTo(TEST_MIN_TICKS_TO_VALIDATE)
         ;
-        assertThat((float) errorCount / testedTicks)
+        assertThat((float) (errorCount) / testedTicks)
                 .describedAs("number of times the minimal precision was not met: %s of %s rate=%s",
                         errorCount, testedTicks, (float) (errorCount) / testedTicks)
                 .isLessThan(MAX_ERRORS_RATE_ALLOWED)

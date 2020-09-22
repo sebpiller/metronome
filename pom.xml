@@ -16,6 +16,23 @@
         <minim.version>2.2.2</minim.version>
     </properties>
 
+    <scm>
+        <url>scm:git:http://spidybox.home:3001/spiller/metronom</url>
+        <connection>http://spidybox.home:3001/spiller/metronom.git</connection>
+        <developerConnection>http://spidybox.home:3001/spiller/metronom.git</developerConnection>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>spidybox-release</id>
+            <url>http://spidybox.home:8091/repository/maven-releases/</url>
+        </repository>
+        <snapshotRepository>
+            <id>spidybox-snapshots</id>
+            <url>http://spidybox.home:8091/repository/maven-snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
     <dependencies>
         <dependency>
             <groupId>junit</groupId>

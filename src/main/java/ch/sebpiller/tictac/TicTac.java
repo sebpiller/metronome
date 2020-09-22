@@ -94,7 +94,7 @@ public class TicTac implements AutoCloseable {
 
         private void loopUntilStopped() {
             long lastBeatNanos;
-            int beatCounter=0;
+            int beatCounter = 0;
 
             while (!stopped) {
                 lastBeatNanos = System.nanoTime(); // memorize last boom
@@ -124,7 +124,7 @@ public class TicTac implements AutoCloseable {
                     // fine grain waiting, waits doing nothing until the required time has elapsed
                     // wait until we have reache required nanos
                     final long l = lastBeatNanos + nanosBetweenTicks;
-                    while(System.nanoTime() < l) {
+                    while (System.nanoTime() < l) {
                         // nothing
                     }
                 }
