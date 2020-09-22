@@ -17,9 +17,9 @@
     </properties>
 
     <scm>
-        <url>scm:git:http://spidybox.home:3001/spiller/metronom</url>
-        <connection>http://spidybox.home:3001/spiller/metronom.git</connection>
-        <developerConnection>http://spidybox.home:3001/spiller/metronom.git</developerConnection>
+        <url>scm:git:http://spidybox.home:3001/spiller/metronom.git</url>
+        <connection>scm:git:http://spidybox.home:3001/spiller/metronom.git</connection>
+        <developerConnection>scm:git:http://spidybox.home:3001/spiller/metronom.git</developerConnection>
     </scm>
 
     <distributionManagement>
