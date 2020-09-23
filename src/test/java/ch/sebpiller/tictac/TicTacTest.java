@@ -72,7 +72,7 @@ public class TicTacTest {
             // ignore
         }
     };
-    private TicTabBuilder builder = new TicTabBuilder().withListener(watcher);
+    private TicTacBuilder builder = new TicTacBuilder().withListener(watcher);
 
     @Parameterized.Parameters
     public static Object[] getParameters() {
@@ -103,7 +103,7 @@ public class TicTacTest {
     @Ignore("just displaying tic-tac")
     @Test
     public void testDisplay() throws Exception {
-        TicTac ticTac = new TicTabBuilder().connectedToBpm(fastBpmReader).build();
+        TicTac ticTac = new TicTacBuilder().connectedToBpm(fastBpmReader).build();
         Thread.sleep(10_000);
         ticTac.close();
     }

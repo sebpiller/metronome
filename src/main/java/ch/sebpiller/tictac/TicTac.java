@@ -10,7 +10,7 @@ public class TicTac implements AutoCloseable {
     /**
      * Sleep the thread the amount of time required minus this value, to implement precise waiting.
      */
-    private static long NANOS_CORRECTION = 20_000_000;
+    private static long NANOS_CORRECTION = 20_000_000; // 20ms
 
     private static final Logger LOG = LoggerFactory.getLogger(TicTac.class);
     private static byte id = 0; // #thread creation id

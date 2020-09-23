@@ -13,7 +13,6 @@
         <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
 
-        <minim.version>2.2.2</minim.version>
     </properties>
 
     <scm>
@@ -59,24 +58,7 @@
             <version>3.17.2</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>net.compartmental.code</groupId>
-            <artifactId>minim</artifactId>
-            <version>${minim.version}</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.4</version>
-            <scope>test</scope>
-        </dependency>
+
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>

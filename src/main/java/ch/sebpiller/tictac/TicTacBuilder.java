@@ -1,18 +1,18 @@
 package ch.sebpiller.tictac;
 
-public class TicTabBuilder {
+public class TicTacBuilder {
     private BpmSource bpmSource = () -> 120;
 
     private TicTac.TicTacListener beat = (ticOrTac, bpm) -> {
         System.out.println((ticOrTac ? "tic   @ " : "  tac @ ") + bpm);
     };
 
-    public TicTabBuilder withListener(TicTac.TicTacListener beat) {
+    public TicTacBuilder withListener(TicTac.TicTacListener beat) {
         this.beat = beat;
         return this;
     }
 
-    public TicTabBuilder connectedToBpm(BpmSource bpmSource) {
+    public TicTacBuilder connectedToBpm(BpmSource bpmSource) {
         this.bpmSource = bpmSource;
         return this;
     }
