@@ -47,11 +47,13 @@ public class TicTac implements AutoCloseable {
     }
 
     public void waitTermination() {
-        synchronized (terminatedNotifier) {
-            try {
-                terminatedNotifier.wait();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+        if (!nt.terminated) {
+            synchronized (terminatedNotifier) {
+                try {
+                    terminatedNotifier.wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
     }
@@ -94,7 +96,7 @@ public class TicTac implements AutoCloseable {
 
                 loopUntilStopped();
             } finally {
-                // we are dead now, notify those waiting for it - you bastards :)
+                // we are dead now, notify those waiting for it
                 terminated = true;
                 synchronized (terminatedNotifier) {
                     terminatedNotifier.notifyAll();
@@ -108,37 +110,35 @@ public class TicTac implements AutoCloseable {
 
             while (!stopped) {
                 try {
-                    {
-                        lastBeatNanos = System.nanoTime(); // memorize last boom
+                    lastBeatNanos = System.nanoTime(); // memorize last boom
 
-                        ///// Boom
-                        ticTacListener.beat(beatCounter++ % 4 != 0, bpm);
+                    ///// Boom
+                    ticTacListener.beat(beatCounter++ % 4 != 0, bpm);
 
-                        // refresh desired tempo
-                        bpm = bpmSource.getBpm();
+                    // refresh desired tempo
+                    bpm = bpmSource.getBpm();
 
-                        if (bpm <= 0) {
-                            // shutdown as soon as the bpm return 0
-                            stopped = true;
+                    if (bpm <= 0) {
+                        // shutdown as soon as the bpm return 0
+                        stopped = true;
+                    } else {
+                        final long nanosBetweenTicks = (long) (60_000_000_000d / bpm);
+                        final long sleepNanos = lastBeatNanos + nanosBetweenTicks - System.nanoTime() - NANOS_CORRECTION;
+
+                        if (sleepNanos < 0) {
+                            // the processing time (bpm source or tic-tac listener) took too much time to tick at the
+                            // correct tempo
+                            LOG.warn("missed tic! ({}ns)", sleepNanos);
+                            beatCounter++;
                         } else {
-                            final long nanosBetweenTicks = (long) (60_000_000_000d / bpm);
-                            final long sleepNanos = lastBeatNanos + nanosBetweenTicks - System.nanoTime() - NANOS_CORRECTION;
+                            sleepInterruptible(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
+                        }
 
-                            if (sleepNanos < 0) {
-                                // the processing time (bpm source or tic-tac listener) took too much time to tick at the
-                                // correct tempo
-                                LOG.warn("missed tic! ({}ns)", sleepNanos);
-                                beatCounter++;
-                            } else {
-                                sleepInterruptible(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
-                            }
-
-                            // fine grain waiting, waits doing nothing until the required time has elapsed
-                            // wait until we have reache required nanos
-                            final long l = lastBeatNanos + nanosBetweenTicks;
-                            while (System.nanoTime() < l) {
-                                // nothing
-                            }
+                        // fine grain waiting, waits doing nothing until the required time has elapsed
+                        // wait until we have reache required nanos
+                        final long l = lastBeatNanos + nanosBetweenTicks;
+                        while (System.nanoTime() < l) {
+                            // nothing
                         }
                     }
                 } catch (Throwable t) {
