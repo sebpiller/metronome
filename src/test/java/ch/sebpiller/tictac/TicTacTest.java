@@ -16,7 +16,14 @@ public class TicTacTest {
 
     // the test is run this length minimum
     static final int TEST_MIN_TICKS_TO_VALIDATE = 50;
-
+    private final TicTac.TicTacListener slowWatcher = (ticOrTac, expectedTempo) -> {
+        watcher.beat(ticOrTac, expectedTempo);
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+    };
     @Parameterized.Parameter
     public int bpm = 0;
     // just returns bpm
@@ -41,7 +48,6 @@ public class TicTacTest {
     };
     private int errorCount, testedTicks;
     private long last;
-
     /* watch if tic tac does good job */
     private final TicTac.TicTacListener watcher = (ticOrTac, expectedTempo) -> {
         testedTicks++;
@@ -62,15 +68,6 @@ public class TicTacTest {
         }
 
         last = now;
-    };
-
-    private final TicTac.TicTacListener slowWatcher = (ticOrTac, expectedTempo) -> {
-        watcher.beat(ticOrTac, expectedTempo);
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            // ignore
-        }
     };
     private TicTacBuilder builder = new TicTacBuilder().withListener(watcher);
 

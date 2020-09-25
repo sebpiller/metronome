@@ -7,12 +7,11 @@ import org.slf4j.LoggerFactory;
  * Tic-tac does the threading job to call a method at a defined rate, as accurately as possible with Java.
  */
 public class TicTac implements AutoCloseable {
+    private static final Logger LOG = LoggerFactory.getLogger(TicTac.class);
     /**
      * Sleep the thread the amount of time required minus this value, to implement precise waiting.
      */
     private static long NANOS_CORRECTION = 20_000_000; // 20ms
-
-    private static final Logger LOG = LoggerFactory.getLogger(TicTac.class);
     private static byte id = 0; // #thread creation id
     final NotificationThread nt;
     /* makes sure the thread is stopped when this object is collected. */
