@@ -43,7 +43,18 @@ public class TicTac implements AutoCloseable {
     }
 
     public void stop() {
-        nt.stopNow();
+        nt.stopped = true;
+        waitTermination();
+    }
+
+    public void waitTermination() {
+        synchronized (terminatedNotifier) {
+            try {
+                terminatedNotifier.wait();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     @FunctionalInterface
@@ -97,36 +108,42 @@ public class TicTac implements AutoCloseable {
             int beatCounter = 0;
 
             while (!stopped) {
-                lastBeatNanos = System.nanoTime(); // memorize last boom
+                try {
+                    {
+                        lastBeatNanos = System.nanoTime(); // memorize last boom
 
-                ///// Boom
-                ticTacListener.beat(beatCounter++ % 4 != 0, bpm);
+                        ///// Boom
+                        ticTacListener.beat(beatCounter++ % 4 != 0, bpm);
 
-                // refresh desired tempo
-                bpm = bpmSource.getBpm();
+                        // refresh desired tempo
+                        bpm = bpmSource.getBpm();
 
-                if (bpm <= 0) {
-                    // shutdown as soon as the bpm return 0
-                    stopped = true;
-                } else {
-                    final long nanosBetweenTicks = (long) (60_000_000_000d / bpm);
-                    final long sleepNanos = lastBeatNanos + nanosBetweenTicks - System.nanoTime() - NANOS_CORRECTION;
+                        if (bpm <= 0) {
+                            // shutdown as soon as the bpm return 0
+                            stopped = true;
+                        } else {
+                            final long nanosBetweenTicks = (long) (60_000_000_000d / bpm);
+                            final long sleepNanos = lastBeatNanos + nanosBetweenTicks - System.nanoTime() - NANOS_CORRECTION;
 
-                    if (sleepNanos < 0) {
-                        // the processing time (bpm source or tic-tac listener) took too much time to tick at the
-                        // correct tempo
-                        LOG.warn("missed tic! ({}ns)", sleepNanos);
-                        beatCounter++;
-                    } else {
-                        sleepInterruptible(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
+                            if (sleepNanos < 0) {
+                                // the processing time (bpm source or tic-tac listener) took too much time to tick at the
+                                // correct tempo
+                                LOG.warn("missed tic! ({}ns)", sleepNanos);
+                                beatCounter++;
+                            } else {
+                                sleepInterruptible(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
+                            }
+
+                            // fine grain waiting, waits doing nothing until the required time has elapsed
+                            // wait until we have reache required nanos
+                            final long l = lastBeatNanos + nanosBetweenTicks;
+                            while (System.nanoTime() < l) {
+                                // nothing
+                            }
+                        }
                     }
-
-                    // fine grain waiting, waits doing nothing until the required time has elapsed
-                    // wait until we have reache required nanos
-                    final long l = lastBeatNanos + nanosBetweenTicks;
-                    while (System.nanoTime() < l) {
-                        // nothing
-                    }
+                } catch (Throwable t) {
+                    LOG.error("error during callback: " + t, t);
                 }
             }
         }
@@ -152,14 +169,8 @@ public class TicTac implements AutoCloseable {
         }
 
         protected void stopNow() {
-            synchronized (terminatedNotifier) {
-                stopLater();
-                try {
-                    terminatedNotifier.wait();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
+            stopLater();
+            waitTermination();
         }
     }
 }
