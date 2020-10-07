@@ -8,7 +8,7 @@ import org.junit.runners.Parameterized;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Ignore
+
 @RunWith(Parameterized.class)
 public class TicTacTest {
     static final float MAX_ERRORS_RATE_ALLOWED = 5 / 100f; // percent allowed of out-of-tolerance result
@@ -33,7 +33,7 @@ public class TicTacTest {
     // what happens with a bpm provider way too slow ?
     private final BpmSource slowAsHellBpmReader = () -> {
         try {
-            Thread.sleep(700);
+            Thread.sleep(1200);
         } catch (InterruptedException e) {
             // ignore
         }
@@ -42,25 +42,33 @@ public class TicTacTest {
     private int errorCount, testedTicks;
     private long last;
     /* watch if tic tac does good job */
-    private final TicTac.TicTacListener watcher = (ticOrTac, expectedTempo) -> {
-        testedTicks++;
-
-        long now = System.nanoTime();
-        long elapsed = now - last;
-        double realBpm = 60_000_000_000d / elapsed;
-
-        System.out.println(
-                (ticOrTac ? "tic  " : "  tac") +
-                        " | measured @ " + String.format("%.4f", realBpm) + " bpm"
-        );
-
-        double delta = expectedTempo - realBpm;
-
-        if (delta > BPM_TOLERANCE || delta < -BPM_TOLERANCE) {
-            errorCount++;
+    private final TicTac.TicTacListener watcher = new TicTac.TicTacListener() {
+        @Override
+        public void missedBeats(int count, float bpm) {
+            System.out.println("missed| " + count + " beats");
         }
 
-        last = now;
+        @Override
+        public void beat(boolean ticOrTac, float bpm) {
+            testedTicks++;
+
+            long now = System.nanoTime();
+            long elapsed = now - last;
+            double realBpm = 60_000_000_000d / elapsed;
+
+            System.out.println(
+                    (ticOrTac ? "tic  " : "  tac") +
+                            " | measured @ " + String.format("%.4f", realBpm) + " bpm"
+            );
+
+            double delta = bpm - realBpm;
+
+            if (delta > BPM_TOLERANCE || delta < -BPM_TOLERANCE) {
+                errorCount++;
+            }
+
+            last = now;
+        }
     };
     private final TicTac.TicTacListener slowWatcher = (ticOrTac, expectedTempo) -> {
         watcher.beat(ticOrTac, expectedTempo);

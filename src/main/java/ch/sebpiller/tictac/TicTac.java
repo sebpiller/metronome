@@ -8,10 +8,7 @@ import org.slf4j.LoggerFactory;
  */
 public class TicTac implements AutoCloseable {
     private static final Logger LOG = LoggerFactory.getLogger(TicTac.class);
-    /**
-     * Sleep the thread the amount of time required minus this value, to implement precise waiting.
-     */
-    private static long NANOS_CORRECTION = 20_000_000; // 20ms
+
     private static byte id = 0; // #thread creation id
     final NotificationThread nt;
     /* makes sure the thread is stopped when this object is collected. */
@@ -60,6 +57,15 @@ public class TicTac implements AutoCloseable {
 
     @FunctionalInterface
     public interface TicTacListener {
+        /**
+         * Invoked when the thread did not have enough time to invoke a tick.
+         *
+         * @param count The number of ticks missed (>=1).
+         * @param bpm   The bpm at which the thread runs.
+         */
+        default void missedBeats(int count, float bpm) {
+            /* noop */
+        }
 
         /**
          * @param ticOrTac tac(false) indicates the beginning of a measure, tic(true) indicates a regular beat. They
@@ -69,15 +75,20 @@ public class TicTac implements AutoCloseable {
     }
 
     class NotificationThread extends Thread {
-        private final TicTacListener ticTacListener;
+        /**
+         * Sleep the thread the amount of time required minus this value, to implement precise waiting.
+         */
+        private int WARMING_TIME_NANOS = 20_000_000; // 20ms
+
+        private final TicTacListener listener;
         private final BpmSource bpmSource;
         private boolean stopped;
         private boolean terminated;
         private float bpm;
 
-        NotificationThread(BpmSource bpmSource, TicTacListener ticTacListener) {
+        NotificationThread(BpmSource bpmSource, TicTacListener listener) {
             this.bpmSource = bpmSource;
-            this.ticTacListener = ticTacListener;
+            this.listener = listener;
             setDaemon(true);
             setName("tictac+notif-" + (++id));
             setPriority(MAX_PRIORITY);
@@ -91,7 +102,7 @@ public class TicTac implements AutoCloseable {
                 do {
                     bpm = bpmSource.getBpm();
                     if (bpm <= 0)
-                        sleepInterruptible(200);
+                        sleepSilently(200, 0);
                 } while (bpm <= 0);
 
                 loopUntilStopped();
@@ -113,7 +124,7 @@ public class TicTac implements AutoCloseable {
                     lastBeatNanos = System.nanoTime(); // memorize last boom
 
                     ///// Boom
-                    ticTacListener.beat(beatCounter++ % 4 != 0, bpm);
+                    listener.beat(beatCounter++ % 4 != 0, bpm);
 
                     // refresh desired tempo
                     bpm = bpmSource.getBpm();
@@ -123,23 +134,22 @@ public class TicTac implements AutoCloseable {
                         stopped = true;
                     } else {
                         final long nanosBetweenTicks = (long) (60_000_000_000d / bpm);
-                        final long sleepNanos = lastBeatNanos + nanosBetweenTicks - System.nanoTime() - NANOS_CORRECTION;
+                        long sleepUntil = lastBeatNanos + nanosBetweenTicks;
 
-                        if (sleepNanos < 0) {
+                        if (sleepUntil < System.nanoTime()) {
                             // the processing time (bpm source or tic-tac listener) took too much time to tick at the
-                            // correct tempo
-                            LOG.warn("missed tic! ({}ns)", sleepNanos);
-                            beatCounter++;
-                        } else {
-                            sleepInterruptible(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
+                            // correct tempo.
+                            int count = (int) ((System.nanoTime() - lastBeatNanos) / nanosBetweenTicks);
+
+                            // recompute next time for event
+                            sleepUntil = lastBeatNanos + (nanosBetweenTicks * count);
+
+                            // notify of the missed beats
+                            listener.missedBeats(count, bpm); // FIXME support long processing time of missedBeats ?
+                            beatCounter += count;
                         }
 
-                        // fine grain waiting, waits doing nothing until the required time has elapsed
-                        // wait until we have reache required nanos
-                        final long l = lastBeatNanos + nanosBetweenTicks;
-                        while (System.nanoTime() < l) {
-                            // nothing
-                        }
+                        sleepUntil(sleepUntil);
                     }
                 } catch (Throwable t) {
                     LOG.error("error during callback: " + t, t);
@@ -151,15 +161,29 @@ public class TicTac implements AutoCloseable {
             return terminated;
         }
 
-        protected void sleepInterruptible(long millis) {
-            sleepInterruptible(millis, 0);
+        /**
+         * Precise time waiting.
+         */
+        private void sleepUntil(long until) {
+            long now = System.nanoTime();
+
+            // if enough time, go to sleep
+            if (until >= now + WARMING_TIME_NANOS) {
+                long sleepNanos = until - now - WARMING_TIME_NANOS;
+                sleepSilently(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
+            }
+
+            // fine grain waiting, waits doing nothing until the required time has elapsed
+            while (System.nanoTime() < until) {
+                // nothing
+            }
         }
 
-        protected void sleepInterruptible(long millis, int nanos) {
+        private void sleepSilently(long millis, int nanos) {
             try {
                 Thread.sleep(millis, nanos);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+                // ignore
             }
         }
 
