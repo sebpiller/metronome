@@ -142,7 +142,7 @@ public class TicTac implements AutoCloseable {
                             int count = (int) ((System.nanoTime() - lastBeatNanos) / nanosBetweenTicks);
 
                             // recompute next time for event
-                            sleepUntil = lastBeatNanos + (nanosBetweenTicks * count);
+                            sleepUntil = lastBeatNanos + (nanosBetweenTicks * (count+1));
 
                             // notify of the missed beats
                             listener.missedBeats(count, bpm); // FIXME support long processing time of missedBeats ?
@@ -166,6 +166,9 @@ public class TicTac implements AutoCloseable {
          */
         private void sleepUntil(long until) {
             long now = System.nanoTime();
+            if (LOG.isTraceEnabled()) {
+                LOG.trace("sleeping until {} (sleeping {}ns)", until, until - now);
+            }
 
             // if enough time, go to sleep
             if (until >= now + WARMING_TIME_NANOS) {
