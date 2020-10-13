@@ -39,8 +39,7 @@ public class TicTac implements AutoCloseable {
     }
 
     public void stop() {
-        nt.stopped = true;
-        waitTermination();
+        nt.stopNow();
     }
 
     public void waitTermination() {
@@ -101,8 +100,13 @@ public class TicTac implements AutoCloseable {
                 // wait data
                 do {
                     bpm = bpmSource.getBpm();
-                    if (bpm <= 0)
-                        sleepSilently(200, 0);
+                    if (bpm <= 0) {
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            // ignore
+                        }
+                    }
                 } while (bpm <= 0);
 
                 loopUntilStopped();
@@ -141,8 +145,8 @@ public class TicTac implements AutoCloseable {
                             // correct tempo.
                             int count = (int) ((System.nanoTime() - lastBeatNanos) / nanosBetweenTicks);
 
-                            // recompute next time for event
-                            sleepUntil = lastBeatNanos + (nanosBetweenTicks * (count+1));
+                            // recompute time for next beat
+                            sleepUntil = lastBeatNanos + (nanosBetweenTicks * (count + 1));
 
                             // notify of the missed beats
                             listener.missedBeats(count, bpm); // FIXME support long processing time of missedBeats ?
@@ -162,7 +166,8 @@ public class TicTac implements AutoCloseable {
         }
 
         /**
-         * Precise time waiting.
+         * Precise time waiting. Use {@link Thread#sleep(long)} to wait until #until - {@link #WARMING_TIME_NANOS},
+         * then loop doing nothing until enough time has elapsed.
          */
         private void sleepUntil(long until) {
             long now = System.nanoTime();
@@ -173,20 +178,18 @@ public class TicTac implements AutoCloseable {
             // if enough time, go to sleep
             if (until >= now + WARMING_TIME_NANOS) {
                 long sleepNanos = until - now - WARMING_TIME_NANOS;
-                sleepSilently(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
+                try {
+                    Thread.sleep(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
+                } catch (InterruptedException e) {
+                    // ignore
+                }
             }
 
-            // fine grain waiting, waits doing nothing until the required time has elapsed
+            // "active" waiting, loop doing nothing until the required time has elapsed
+            // using a loop instead of Object#wait makes the current thread less likely to be put to sleep during the
+            // execution.
             while (System.nanoTime() < until) {
                 // nothing
-            }
-        }
-
-        private void sleepSilently(long millis, int nanos) {
-            try {
-                Thread.sleep(millis, nanos);
-            } catch (InterruptedException e) {
-                // ignore
             }
         }
 
