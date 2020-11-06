@@ -17,20 +17,20 @@
     </properties>
 
     <scm>
-        <url>scm:git:http://spidybox.home:3001/spiller/metronom.git</url>
-        <connection>scm:git:http://spidybox.home:3001/spiller/metronom.git</connection>
-        <developerConnection>scm:git:http://spidybox.home:3001/spiller/metronom.git</developerConnection>
+        <url>scm:git:http://git.home/spiller/metronom.git</url>
+        <connection>scm:git:http://git.home/spiller/metronom.git</connection>
+        <developerConnection>scm:git:http://git.home/spiller/metronom.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
         <repository>
             <id>spidybox-release</id>
-            <url>http://home.sebpiller.ch:8081/repository/maven-releases/</url>
+            <url>http://repos.home/nexus/repository/maven-releases/</url>
         </repository>
         <snapshotRepository>
             <id>spidybox-snapshots</id>
-            <url>http://home.sebpiller.ch:8081/repository/maven-snapshots/</url>
+            <url>http://repos.home/nexus/repository/maven-snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
@@ -50,7 +50,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13</version>
+            <version>4.13.1</version>
             <scope>test</scope>
         </dependency>
         <dependency>
