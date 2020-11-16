@@ -20,9 +20,9 @@ public class TicTacTest {
     @Parameterized.Parameter
     public int bpm = 0;
     // just returns bpm
-    private final BpmSource fastBpmReader = () -> bpm;
+    private final TempoProvider fastBpmReader = () -> bpm;
     // just returns bpm, but after 150ms delay
-    private final BpmSource slowBpmReader = () -> {
+    private final TempoProvider slowBpmReader = () -> {
         try {
             Thread.sleep(100);
         } catch (InterruptedException e) {
@@ -31,7 +31,7 @@ public class TicTacTest {
         return bpm;
     };
     // what happens with a bpm provider way too slow ?
-    private final BpmSource slowAsHellBpmReader = () -> {
+    private final TempoProvider slowAsHellBpmReader = () -> {
         try {
             Thread.sleep(1200);
         } catch (InterruptedException e) {
