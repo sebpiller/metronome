@@ -4,7 +4,7 @@
 
     <groupId>ch.sebpiller</groupId>
     <artifactId>metronom</artifactId>
-    <version>0.1.4-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <name>Metronom</name>
     <description>Produces beat at a constant and precise rate.</description>
 
