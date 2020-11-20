@@ -4,7 +4,7 @@
 
     <groupId>ch.sebpiller</groupId>
     <artifactId>metronom</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+    <version>0.2.0</version>
     <name>Metronom</name>
     <description>Produces beat at a constant and precise rate.</description>
 
@@ -20,7 +20,7 @@
         <url>scm:git:http://git.home/spiller/metronom.git</url>
         <connection>scm:git:http://git.home/spiller/metronom.git</connection>
         <developerConnection>scm:git:http://git.home/spiller/metronom.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>metronom-0.2.0</tag>
     </scm>
 
     <distributionManagement>
