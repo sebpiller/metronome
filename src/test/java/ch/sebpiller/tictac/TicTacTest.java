@@ -9,11 +9,10 @@ import org.junit.runners.Parameterized;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@Ignore
 @RunWith(Parameterized.class)
 public class TicTacTest {
     static final float MAX_ERRORS_RATE_ALLOWED = 5 / 100f; // percent allowed of out-of-tolerance result
-    static final float BPM_TOLERANCE = 1 / 100f; // when to consider an error occurred
+    static final float BPM_TOLERANCE = 5 / 100f; // when to consider an error occurred
 
     // the test is run this length minimum
     static final int TEST_MIN_TICKS_TO_VALIDATE = 50;
