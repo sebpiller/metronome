@@ -20,19 +20,7 @@
         <url>scm:git:http://git.home/spiller/metronom.git</url>
         <connection>scm:git:http://git.home/spiller/metronom.git</connection>
         <developerConnection>scm:git:http://git.home/spiller/metronom.git</developerConnection>
-        <tag>HEAD</tag>
     </scm>
-
-    <distributionManagement>
-        <repository>
-            <id>spidybox-release</id>
-            <url>http://nexus.home/repository/maven-releases/</url>
-        </repository>
-        <snapshotRepository>
-            <id>spidybox-snapshots</id>
-            <url>http://nexus.home/repository/maven-snapshots/</url>
-        </snapshotRepository>
-    </distributionManagement>
 
     <build>
         <pluginManagement>
