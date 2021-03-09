@@ -9,5 +9,5 @@
         <appender-ref ref="console"/>
     </root>
 
-    <logger name="ch.sebpiller.tictac" level="TRACE"/>
+    <logger name="ch.sebpiller.metronome" level="TRACE"/>
 </configuration>

@@ -1,22 +1,38 @@
-package ch.sebpiller.tictac;
+package ch.sebpiller.metronome;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Tic-tac does the threading job to call a method at a defined rate, as accurately as possible with Java.
- */
-public class TicTac implements AutoCloseable {
-    private static final Logger LOG = LoggerFactory.getLogger(TicTac.class);
+import java.util.concurrent.atomic.AtomicInteger;
 
-    private static byte id = 0; // #thread creation id
-    final NotificationThread nt;
-    /* makes sure the thread is stopped when this object is collected. */
-    private final Object _finalizerGuard = new Object() {
+/**
+ * Metronome does the threading job to call a method at a defined rate, as accurately as possible with Java.
+ */
+public class Metronome implements AutoCloseable {
+    private static final Logger LOG = LoggerFactory.getLogger(Metronome.class);
+    private static final AtomicInteger LAST_THREAD_ID = new AtomicInteger(0);
+
+    private final NotificationThread nt;
+
+    /* Makes sure the thread is stopped cleanly when this object is collected.
+     * See Effective Java, Item 7: http://sunmingtao.blogspot.com/2016/03/finalizer-guardian.html */
+    @SuppressWarnings("java:S1068")
+    private final Object finalizerGuardian = new Object() {
+        /**
+         * {@inheritDoc}
+         *
+         * @deprecated since Java 9, on class {@link Object}
+         */
+        @Deprecated
+        @SuppressWarnings("java:S1113")
         @Override
         protected void finalize() throws Throwable {
+            if (!Metronome.this.isTerminated()) {
+                LOG.warn("TicTac has not been closed - finalizer guardian does the cleaning");
+            }
+
             try {
-                TicTac.this.nt.stopLater();
+                Metronome.this.close();
             } finally {
                 super.finalize();
             }
@@ -24,15 +40,14 @@ public class TicTac implements AutoCloseable {
     };
     private final Object terminatedNotifier = new Object();
 
-    /**
-     * Events are produced at regular intervals to ticTacListener. Internal processing time is compensated.
-     */
-    public TicTac(TempoProvider tempoProvider, TicTacListener ticTacListener) {
-        nt = new NotificationThread(tempoProvider, ticTacListener);
+    public Metronome(Tempo tempo, MetronomeListener metronomeListener) {
+        nt = new NotificationThread(tempo, metronomeListener);
         nt.start();
     }
 
-    // alias of #stop()
+    /**
+     * Alias of #stop()
+     */
     @Override
     public void close() {
         stop();
@@ -43,10 +58,10 @@ public class TicTac implements AutoCloseable {
     }
 
     public void waitTermination() {
-        if (!nt.terminated) {
-            synchronized (terminatedNotifier) {
+        synchronized (terminatedNotifier) {
+            while (!isTerminated()) {
                 try {
-                    terminatedNotifier.wait();
+                    terminatedNotifier.wait(100);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
@@ -54,8 +69,12 @@ public class TicTac implements AutoCloseable {
         }
     }
 
+    public boolean isTerminated() {
+        return nt.isTerminated();
+    }
+
     @FunctionalInterface
-    public interface TicTacListener {
+    public interface MetronomeListener {
         /**
          * Invoked when the thread did not have enough time to invoke a tick.
          *
@@ -73,23 +92,23 @@ public class TicTac implements AutoCloseable {
         void beat(boolean ticOrTac, float bpm);
     }
 
-    class NotificationThread extends Thread {
+    private final class NotificationThread extends Thread {
         /**
          * Sleep the thread the amount of time required minus this value, to implement precise waiting.
          */
-        private int THREAD_SLEEP_OFFSET = 20_000_000; // 20ms
+        private static final int THREAD_SLEEP_OFFSET = 20_000_000; // 20ms
 
-        private final TicTacListener listener;
-        private final TempoProvider tempoProvider;
+        private final MetronomeListener listener;
+        private final Tempo tempo;
         private boolean stopped;
         private boolean terminated;
-        private float bpm;
+        private Number bpm;
 
-        NotificationThread(TempoProvider tempoProvider, TicTacListener listener) {
-            this.tempoProvider = tempoProvider;
+        NotificationThread(Tempo tempo, MetronomeListener listener) {
+            this.tempo = tempo;
             this.listener = listener;
             setDaemon(true);
-            setName("tictac+notif-" + (++id));
+            setName("metronome+notif-" + LAST_THREAD_ID.incrementAndGet());
             setPriority(MAX_PRIORITY);
         }
 
@@ -99,15 +118,16 @@ public class TicTac implements AutoCloseable {
                 stopped = false;
                 // wait data
                 do {
-                    bpm = tempoProvider.getTempo();
-                    if (bpm <= 0) {
+                    bpm = tempo.get();
+
+                    if (bpm == null || bpm.floatValue() <= 0) {
                         try {
                             Thread.sleep(200);
                         } catch (InterruptedException e) {
-                            // ignore
+                            Thread.currentThread().interrupt();
                         }
                     }
-                } while (bpm <= 0);
+                } while (bpm == null || bpm.floatValue() <= 0);
 
                 loopUntilStopped();
             } finally {
@@ -122,41 +142,42 @@ public class TicTac implements AutoCloseable {
         private void loopUntilStopped() {
             long lastBeatNanos;
             int beatCounter = 0;
+            float bpmAsFloat;
 
             while (!stopped) {
                 try {
-                    lastBeatNanos = System.nanoTime(); // memorize last boom
+                    // refresh desired tempo
+                    bpm = tempo.get();
+                    bpmAsFloat = bpm == null ? 0 : bpm.floatValue();
 
                     ///// Boom
-                    listener.beat(beatCounter++ % 4 != 0, bpm);
+                    lastBeatNanos = System.nanoTime();
+                    listener.beat(beatCounter++ % 4 != 0, bpmAsFloat);
 
-                    // refresh desired tempo
-                    bpm = tempoProvider.getTempo();
-
-                    if (bpm <= 0) {
-                        // shutdown as soon as the bpm return 0
+                    if (bpm == null || (bpmAsFloat = bpm.floatValue()) <= 0) {
+                        // shutdown as soon as the bpm return 0 or null
                         stopped = true;
                     } else {
-                        final long nanosBetweenTicks = (long) (60_000_000_000d / bpm);
+                        final long nanosBetweenTicks = (long) (60_000_000_000d / bpmAsFloat);
                         long until = lastBeatNanos + nanosBetweenTicks;
 
                         if (until < System.nanoTime()) {
-                            // the processing time (bpm source or tic-tac listener) took too much time to tick at the
-                            // correct tempo.
+                            // the processing time (tempo or listener) took too much time to tick at the
+                            // correct instant - we are facing a "missed beat" situation.
                             int count = (int) ((System.nanoTime() - lastBeatNanos) / nanosBetweenTicks);
 
                             // recompute time for next beat
                             until = lastBeatNanos + (nanosBetweenTicks * (count + 1));
 
                             // notify of the missed beats
-                            listener.missedBeats(count, bpm); // FIXME support long processing time of missedBeats ?
+                            listener.missedBeats(count, bpmAsFloat); // FIXME support long processing time of missedBeats ?
                             beatCounter += count;
                         }
 
-                        sleepUntil(until);
+                        preciseSleep(until);
                     }
-                } catch (Throwable t) {
-                    LOG.error("error during callback: " + t, t);
+                } catch (Exception e) {
+                    LOG.warn("exception during callback: {}", e.getMessage(), e);
                 }
             }
         }
@@ -166,10 +187,14 @@ public class TicTac implements AutoCloseable {
         }
 
         /**
-         * Precise time waiting. Use {@link Thread#sleep(long)} to wait until #until - {@link #THREAD_SLEEP_OFFSET},
-         * then loop doing nothing until enough time has elapsed.
+         * Precise time waiting. Uses {@link Thread#sleep(long, int)} to wait until #until minus
+         * {@value #THREAD_SLEEP_OFFSET}ns, then loop doing nothing until enough time has elapsed.
+         *
+         * This empty loop (which does nothing and particularly does NOT yield the current thread in any way) is an
+         * attempt to reduce the odds of being interrupted by another thread. Thus implements the main objective of
+         * "precise time waiting" of this API.
          */
-        private void sleepUntil(long until) {
+        private void preciseSleep(long until) {
             long now = System.nanoTime();
             if (LOG.isTraceEnabled()) {
                 LOG.trace("sleeping until {} (sleeping {}ns)", until, until - now);
@@ -181,14 +206,14 @@ public class TicTac implements AutoCloseable {
                 try {
                     Thread.sleep(sleepNanos / 1_000_000, (int) (sleepNanos % 1_000_000));
                 } catch (InterruptedException e) {
-                    // ignore
+                    Thread.currentThread().interrupt();
                 }
             }
 
             // "active" waiting, loop doing nothing until the required time has elapsed
             // using a loop in a high priority thread make it less likely to be put to sleep during the execution.
             while (System.nanoTime() < until) {
-                // nothing
+                // nothing. really, nothing
             }
         }
 

@@ -1,4 +1,4 @@
-package ch.sebpiller.tictac;
+package ch.sebpiller.metronome;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -6,44 +6,25 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-@Ignore
+/**
+ * This test is considered successful when at most {@value MAX_ERRORS_RATE_ALLOWED} (percentile) of all runs are measured
+ * to be off by at most {@value BPM_TOLERANCE} BPMs from the expected value.
+ */
 @RunWith(Parameterized.class)
-public class TicTacTest {
+public class MetronomeTest {
     static final float MAX_ERRORS_RATE_ALLOWED = 5 / 100f; // percent allowed of out-of-tolerance result
     static final float BPM_TOLERANCE = 5 / 100f; // when to consider an error occurred
 
     // the test is run this length minimum
     static final int TEST_MIN_TICKS_TO_VALIDATE = 50;
 
-    @Parameterized.Parameter
-    public int bpm = 0;
-    // just returns bpm
-    private final TempoProvider fastBpmReader = () -> bpm;
-    // just returns bpm, but after 150ms delay
-    private final TempoProvider slowBpmReader = () -> {
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            // ignore
-        }
-        return bpm;
-    };
-    // what happens with a bpm provider way too slow ?
-    private final TempoProvider slowAsHellBpmReader = () -> {
-        try {
-            Thread.sleep(1200);
-        } catch (InterruptedException e) {
-            // ignore
-        }
-        return bpm;
-    };
-    private int errorCount, testedTicks;
-    private long last;
-    /* watch if tic tac does good job */
-    private final TicTac.TicTacListener watcher = new TicTac.TicTacListener() {
+    /* watch if metronom does good job */
+    private final Metronome.MetronomeListener watcher = new Metronome.MetronomeListener() {
         @Override
         public void missedBeats(int count, float bpm) {
             System.out.println("missed| " + count + " beats");
@@ -65,13 +46,14 @@ public class TicTacTest {
             double delta = bpm - realBpm;
 
             if (delta > BPM_TOLERANCE || delta < -BPM_TOLERANCE) {
-                errorCount++;
+                errorCount.incrementAndGet();
             }
 
             last = now;
         }
     };
-    private final TicTac.TicTacListener slowWatcher = (ticOrTac, expectedTempo) -> {
+
+    private final Metronome.MetronomeListener slowWatcher = (ticOrTac, expectedTempo) -> {
         watcher.beat(ticOrTac, expectedTempo);
         try {
             Thread.sleep(100);
@@ -79,9 +61,34 @@ public class TicTacTest {
             // ignore
         }
     };
-    private TicTacBuilder builder = new TicTacBuilder().withListener(watcher);
+    private final MetronomeBuilder builder = new MetronomeBuilder().withListener(watcher);
+    @Parameterized.Parameter
+    public int bpm = 0;
+    // just returns bpm
+    private final Tempo fastBpmReader = () -> bpm;
+    // just returns bpm, but after 150ms delay
+    private final Tempo slowTempoProvider = () -> {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        return bpm;
+    };
+    // what happens with a bpm provider way too slow ?
+    private final Tempo slowAsHellTempoProvider = () -> {
+        try {
+            Thread.sleep(1200);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+        return bpm;
+    };
+    private AtomicInteger errorCount = new AtomicInteger(0);
+    private int testedTicks;
+    private long last;
 
-    @Parameterized.Parameters
+    @Parameterized.Parameters(name = "{index} - @{0}bpm")
     public static Object[] getParameters() {
         return new Object[]{
                 160,
@@ -96,67 +103,69 @@ public class TicTacTest {
     public void setUp() {
         // warmup the thread...
         System.out.println("warmup the thread...");
+
         try {
-            Thread.sleep(2000);
+            Thread.sleep(2000); //NOSONAR
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
-        errorCount = -1; // the first measure is always an error, since we don't have any other beat to compute a tempo
+        errorCount.set(-1); // the first measure is always an error, since we don't have any other beat to compute a tempo
         testedTicks = 0;
         last = 0;
     }
 
-    @Ignore("just displaying tic-tac")
-    @Test
-    public void testDisplay() throws Exception {
-        TicTac ticTac = new TicTacBuilder().connectedToBpm(fastBpmReader).build();
-        Thread.sleep(10_000);
-        ticTac.close();
-    }
-
     @Test
     public void testFastBpmReader() throws Exception {
-        testTicTac(builder.connectedToBpm(fastBpmReader).build());
+        testMetronom(builder.withRhythm(fastBpmReader).build());
     }
 
+    @Ignore("TODO reimplement")
     @Test
-    public void testSlowBpmReader() throws Exception {
-        testTicTac(builder.connectedToBpm(slowBpmReader).build());
+    public void testSlowTempoProvider() throws Exception {
+        testMetronom(builder.withRhythm(slowTempoProvider).build());
     }
 
+    @Ignore("TODO reimplement")
     @Test(expected = Error.class)
     public void testSlowAsHellBpmReader() throws Exception {
         // TODO fix the expected error as it should be more specific
-        testTicTac(builder.connectedToBpm(slowAsHellBpmReader).build());
+        testMetronom(builder.withRhythm(slowAsHellTempoProvider).build());
     }
 
+    @Ignore("TODO reimplement")
     @Test
     public void testSlowBpmReaderAndSlowListener() throws Exception {
-        testTicTac(builder.connectedToBpm(slowBpmReader).withListener(slowWatcher).build());
+        testMetronom(builder.withRhythm(slowTempoProvider).withListener(slowWatcher).build());
     }
 
     /**
      * Asserts that TicTac has been able to produce at most {@value MAX_ERRORS_RATE_ALLOWED} errors of precision during a
      * run a {@value TEST_MIN_TICKS_TO_VALIDATE} ticks.
      */
-    private void testTicTac(TicTac ticTac) throws InterruptedException {
+    @SuppressWarnings("java:S2925")
+    private void testMetronom(Metronome metronome) throws InterruptedException {
         System.out.println("testing tic-tac @" + bpm + "bpm...");
 
         Thread.sleep((long) ((60_000d / bpm * TEST_MIN_TICKS_TO_VALIDATE) + 2000));
-        ticTac.close();
+        while (testedTicks < TEST_MIN_TICKS_TO_VALIDATE) {
+            Thread.sleep(100);
+        }
+        metronome.close();
 
-        assertThat(ticTac.nt.isTerminated())
-                .describedAs("tic tac has not been closed correctly"
+        assertThat(metronome.isTerminated())
+                .describedAs("metronome has not been closed correctly"
                 ).isTrue()
         ;
         assertThat(testedTicks)
                 .describedAs("less ticks than expected: %s received, where %s at least were expected", testedTicks, TEST_MIN_TICKS_TO_VALIDATE)
                 .isGreaterThanOrEqualTo(TEST_MIN_TICKS_TO_VALIDATE)
         ;
-        assertThat((float) (errorCount) / testedTicks)
+
+        int i = errorCount.get();
+        assertThat((float) i / testedTicks)
                 .describedAs("number of times the minimal precision was not met: %s of %s rate=%s",
-                        errorCount, testedTicks, (float) (errorCount) / testedTicks)
+                        errorCount, testedTicks, (float) i / testedTicks)
                 .isLessThan(MAX_ERRORS_RATE_ALLOWED)
         ;
     }
