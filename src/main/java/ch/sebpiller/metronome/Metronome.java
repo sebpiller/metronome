@@ -116,19 +116,7 @@ public class Metronome implements AutoCloseable {
         public void run() {
             try {
                 stopped = false;
-                // wait data
-                do {
-                    bpm = tempo.get();
-
-                    if (bpm == null || bpm.floatValue() <= 0) {
-                        try {
-                            Thread.sleep(200);
-                        } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                        }
-                    }
-                } while (bpm == null || bpm.floatValue() <= 0);
-
+                waitForTempoData();
                 loopUntilStopped();
             } finally {
                 // we are dead now, notify those waiting for it
@@ -137,6 +125,20 @@ public class Metronome implements AutoCloseable {
                     terminatedNotifier.notifyAll();
                 }
             }
+        }
+
+        private void waitForTempoData() {
+            do {
+                bpm = tempo.get();
+
+                if (bpm == null || bpm.floatValue() <= 0) {
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            } while (bpm == null || bpm.floatValue() <= 0);
         }
 
         private void loopUntilStopped() {
