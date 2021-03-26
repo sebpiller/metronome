@@ -16,7 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * to be off by at most {@value BPM_TOLERANCE} BPMs from the expected value.
  */
 @RunWith(Parameterized.class)
-public class MetronomeTest {
+public class MetronomeIntegrationTest {
     static final float MAX_ERRORS_RATE_ALLOWED = 5 / 100f; // percent allowed of out-of-tolerance result
     static final float BPM_TOLERANCE = 5 / 100f; // when to consider an error occurred
 
