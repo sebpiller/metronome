@@ -1,10 +1,9 @@
 package ch.sebpiller.metronome;
 
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -15,8 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * This test is considered successful when at most {@value MAX_ERRORS_RATE_ALLOWED} (percentile) of all runs are measured
  * to be off by at most {@value BPM_TOLERANCE} BPMs from the expected value.
  */
-@RunWith(Parameterized.class)
-public class MetronomeIntegrationTest {
+class MetronomeIntegrationTest {
     static final float MAX_ERRORS_RATE_ALLOWED = 5 / 100f; // percent allowed of out-of-tolerance result
     static final float BPM_TOLERANCE = 25 / 100f; // when to consider an error occurred
 
@@ -62,45 +60,13 @@ public class MetronomeIntegrationTest {
         }
     };
     private final MetronomeBuilder builder = new MetronomeBuilder().withListener(watcher);
-    @Parameterized.Parameter
-    public int bpm = 0;
-    // just returns bpm
-    private final Tempo fastBpmReader = () -> bpm;
-    // just returns bpm, but after 150ms delay
-    private final Tempo slowTempoProvider = () -> {
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            // ignore
-        }
-        return bpm;
-    };
-    // what happens with a bpm provider way too slow ?
-    private final Tempo slowAsHellTempoProvider = () -> {
-        try {
-            Thread.sleep(1200);
-        } catch (InterruptedException e) {
-            // ignore
-        }
-        return bpm;
-    };
+
     private AtomicInteger errorCount = new AtomicInteger(0);
     private int testedTicks;
     private long last;
 
-    @Parameterized.Parameters(name = "{index} - @{0}bpm")
-    public static Object[] getParameters() {
-        return new Object[]{
-                160,
-                140,
-                120,
-                100,
-                85,
-        };
-    }
-
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         // warmup the thread...
         System.out.println("warmup the thread...");
 
@@ -115,28 +81,66 @@ public class MetronomeIntegrationTest {
         last = 0;
     }
 
-    @Test
-    public void testFastBpmReader() throws Exception {
-        testMetronom(builder.withRhythm(fastBpmReader).build());
+
+   /* @Parameterized.Parameters(name = "{index} - @{0}bpm")
+    public static Object[] getParameters() {
+        return new Object[]{
+                160,
+                140,
+                120,
+                100,
+                85,
+        };
+    }*/
+
+    @ParameterizedTest
+    @ValueSource(ints = {160, /*140, 120, 100, 85*/})
+    public void testFastBpmReader(int bpm) throws Exception {
+        testMetronom(bpm, builder.withRhythm(() -> bpm).build());
     }
 
-    @Ignore("TODO reimplement")
-    @Test
-    public void testSlowTempoProvider() throws Exception {
-        testMetronom(builder.withRhythm(slowTempoProvider).build());
+    @Disabled("TODO reimplement")
+    @ParameterizedTest
+    @ValueSource(ints = {160, /*140, 120, 100, 85*/})
+    public void testSlowTempoProvider(int bpm) throws Exception {
+        testMetronom(bpm, builder.withRhythm(() -> {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+            return bpm;
+        }).build());
     }
 
-    @Ignore("TODO reimplement")
-    @Test(expected = Error.class)
-    public void testSlowAsHellBpmReader() throws Exception {
+    @Disabled("TODO reimplement")
+    @ParameterizedTest
+    @ValueSource(ints = {160, /*140, 120, 100, 85*/})
+    //@Test(expected = Error.class)
+    public void testSlowAsHellBpmReader(int bpm) throws Exception {
         // TODO fix the expected error as it should be more specific
-        testMetronom(builder.withRhythm(slowAsHellTempoProvider).build());
+        testMetronom(bpm, builder.withRhythm(() -> {
+            try {
+                Thread.sleep(1200);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+            return bpm;
+        }).build());
     }
 
-    @Ignore("TODO reimplement")
-    @Test
-    public void testSlowBpmReaderAndSlowListener() throws Exception {
-        testMetronom(builder.withRhythm(slowTempoProvider).withListener(slowWatcher).build());
+    @Disabled("TODO reimplement")
+    @ParameterizedTest
+    @ValueSource(ints = {160, /*140, 120, 100, 85*/})
+    public void testSlowBpmReaderAndSlowListener(int bpm) throws Exception {
+        testMetronom(bpm, builder.withRhythm(() -> {
+            try {
+                Thread.sleep(1200);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+            return bpm;
+        }).withListener(slowWatcher).build());
     }
 
     /**
@@ -144,10 +148,10 @@ public class MetronomeIntegrationTest {
      * run a {@value TEST_MIN_TICKS_TO_VALIDATE} ticks.
      */
     @SuppressWarnings("java:S2925")
-    private void testMetronom(Metronome metronome) throws InterruptedException {
-        System.out.println("testing tic-tac @" + bpm + "bpm...");
+    private void testMetronom(int expectedTempo, Metronome metronome) throws InterruptedException {
+        System.out.println("testing tic-tac @" + expectedTempo + "bpm...");
 
-        Thread.sleep((long) ((60_000d / bpm * TEST_MIN_TICKS_TO_VALIDATE) + 2000));
+        Thread.sleep((long) ((60_000d / expectedTempo * TEST_MIN_TICKS_TO_VALIDATE) + 2000));
         while (testedTicks < TEST_MIN_TICKS_TO_VALIDATE) {
             Thread.sleep(100);
         }

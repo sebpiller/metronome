@@ -30,7 +30,7 @@
   </scm>
   <properties>
     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-    <maven.compiler.source>8</maven.compiler.source>
+    <maven.compiler.source>1.8</maven.compiler.source>
     <modifier>-SNAPSHOT</modifier>
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     <surefire.jacoco.args></surefire.jacoco.args>
@@ -39,7 +39,7 @@
     <failIfNoTests>true</failIfNoTests>
     <failsafe.jacoco.args></failsafe.jacoco.args>
     <revision></revision>
-    <maven.compiler.target>8</maven.compiler.target>
+    <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
     <feature></feature>
     <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ssZ</maven.build.timestamp.format>
     <skipITs>false</skipITs>
@@ -49,15 +49,15 @@
   </properties>
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.1</version>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>5.7.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
-      <version>3.17.2</version>
+      <version>3.19.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -219,7 +219,7 @@
               <id>before-integration-test-execution</id>
               <phase>pre-integration-test</phase>
               <goals>
-                <goal>prepare-agent</goal>
+                <goal>prepare-agent-integration</goal>
               </goals>
               <configuration>
                 <append>false</append>
@@ -375,7 +375,7 @@
             </execution>
             <execution>
               <id>verify-integration-test</id>
-              <phase>verify</phase>
+              <phase>post-integration-test</phase>
               <goals>
                 <goal>verify</goal>
               </goals>
@@ -397,14 +397,12 @@
           <executions>
             <execution>
               <id>build-site</id>
-              <phase>install</phase>
               <goals>
                 <goal>site</goal>
               </goals>
             </execution>
             <execution>
               <id>pack-site</id>
-              <phase>install</phase>
               <goals>
                 <goal>jar</goal>
               </goals>
@@ -440,9 +438,6 @@
       </plugin>
       <plugin>
         <artifactId>maven-failsafe-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <artifactId>maven-site-plugin</artifactId>
       </plugin>
     </plugins>
   </build>
