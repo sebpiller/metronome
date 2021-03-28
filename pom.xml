@@ -12,8 +12,8 @@
     <properties>
         <!-- RELEASE PIPELINE VERSION -->
         <branch>0.2.3</branch><!-- fallback when not in a release branch-->
-        <feature /> <!-- tag with the feature name for feature branches build -->
-        <revision /><!-- will be assigned by jenkins -->
+        <feature/> <!-- tag with the feature name for feature branches build -->
+        <revision/><!-- will be assigned by jenkins -->
         <modifier>-SNAPSHOT</modifier><!-- replace with blank for a release deploy -->
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,7 +31,7 @@
         <skipITs>false</skipITs>
         <failsafe.jacoco.args/>
 
-        <jacoco.mincoverage>30%</jacoco.mincoverage>
+        <jacoco.mincoverage>0%</jacoco.mincoverage>
         <failIfNoTests>true</failIfNoTests>
     </properties>
 
@@ -47,7 +47,8 @@
                 <role>developer</role>
             </roles>
             <properties>
-                <picUrl>https://fr.gravatar.com/userimage/203993716/6f8cf03f83f3f97a2e7b67834061a745.jpg?size=200</picUrl>
+                <picUrl>https://fr.gravatar.com/userimage/203993716/6f8cf03f83f3f97a2e7b67834061a745.jpg?size=200
+                </picUrl>
             </properties>
         </developer>
     </developers>
@@ -441,12 +442,14 @@
                     <executions>
                         <execution>
                             <id>build-site</id>
+                            <phase>install</phase>
                             <goals>
                                 <goal>site</goal>
                             </goals>
                         </execution>
                         <execution>
                             <id>pack-site</id>
+                            <phase>install</phase>
                             <goals>
                                 <goal>jar</goal>
                             </goals>
@@ -483,6 +486,9 @@
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-site-plugin</artifactId>
             </plugin>
         </plugins>
     </build>

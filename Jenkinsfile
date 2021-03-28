@@ -61,10 +61,16 @@ stages
               env.BRANCH_TYPE = "release"
               env.DO_TAG = "true"
               env.BUILD_DOCKER = "true"
-
               env.RELEASE_VERSION = matcherRelease[0][1]
 
-              versionOpts = "-Dbranch=" + env.RELEASE_VERSION + " -Dfeature= -Drevision=.b$BUILD_NUMBER -Dmodifier="
+              // The first build of a release branch do not append a suffix to the version number, only subsequent
+              // contain a build number (bX)
+              if( env.BUILD_NUMBER == "1") {
+                  versionOpts = "-Dbranch=" + env.RELEASE_VERSION + " -Dfeature= -Drevision= -Dmodifier="
+              } else {
+                  versionOpts = "-Dbranch=" + env.RELEASE_VERSION + " -Dfeature= -Drevision=.b$BUILD_NUMBER -Dmodifier="
+              }
+
               env.DOCKER_TAG = env.RELEASE_VERSION + ".b$BUILD_NUMBER"
           } else if(matcherFeature.matches()) {
               // Feature branches are tagged as snapshot of a particular name, with build number in it.
@@ -211,25 +217,6 @@ stages
      }
    }
 
-//   stage('Docker Push')
-//    {
-//     steps
-//      {
-//       script
-//        {
-//          echo env.BUILD_DOCKER
-//          echo env.DOCKER_TAG
-//
-//          if ( env.BUILD_DOCKER == "true" ) {
-//              sh '''
-//                 docker buildx build --platform linux/arm64,linux/arm/v7 --push -t sebpiller/epg-scrapper:latest -t sebpiller/epg-scrapper:${DOCKER_TAG} .
-//              '''
-//          } else {
-//              echo "No docker push for this kind of branch: " + env.BRANCH_TYPE
-//          }
-//        }
-//      }
-//    }
  }
 
 }
