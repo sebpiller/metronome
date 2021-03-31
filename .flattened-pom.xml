@@ -2,9 +2,9 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>ch.sebpiller</groupId>
+  <groupId>ch.sebpiller.metronome</groupId>
   <artifactId>metronome</artifactId>
-  <version>0.2.3-SNAPSHOT</version>
+  <version>999-SNAPSHOT</version>
   <name>Metronome</name>
   <description>Produces beat at a constant and precise rate.</description>
   <developers>
@@ -28,14 +28,19 @@
     <developerConnection>scm:git:http://git.home/spiller/metronome.git</developerConnection>
     <url>scm:git:http://git.home/spiller/metronome.git</url>
   </scm>
+  <issueManagement>
+    <system>Gitea</system>
+    <url>http://git.home/spiller/metronome/issues</url>
+  </issueManagement>
   <properties>
+    <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
     <maven.compiler.source>1.8</maven.compiler.source>
     <modifier>-SNAPSHOT</modifier>
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     <surefire.jacoco.args></surefire.jacoco.args>
     <skipUTs>false</skipUTs>
-    <branch>0.2.3</branch>
+    <branch>999</branch>
     <failIfNoTests>true</failIfNoTests>
     <failsafe.jacoco.args></failsafe.jacoco.args>
     <revision></revision>
@@ -45,6 +50,7 @@
     <skipITs>false</skipITs>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jacoco.mincoverage>0%</jacoco.mincoverage>
+    <dynamicVersion>branchfeaturemodifier</dynamicVersion>
     <timestamp>${maven.build.timestamp}</timestamp>
   </properties>
   <dependencies>
@@ -177,7 +183,7 @@
         </plugin>
         <plugin>
           <artifactId>maven-checkstyle-plugin</artifactId>
-          <version>3.1.2</version>
+          <version>${checkstyle-plugin.version}</version>
           <dependencies>
             <dependency>
               <groupId>com.puppycrawl.tools</groupId>
@@ -201,7 +207,6 @@
               </goals>
               <configuration>
                 <append>false</append>
-                <destFile>${project.build.directory}/UT-coverage.jacoco</destFile>
                 <propertyName>surefire.jacoco.args</propertyName>
               </configuration>
             </execution>
@@ -210,10 +215,6 @@
               <goals>
                 <goal>report</goal>
               </goals>
-              <configuration>
-                <dataFile>${project.build.directory}/UT-coverage.jacoco</dataFile>
-                <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-              </configuration>
             </execution>
             <execution>
               <id>before-integration-test-execution</id>
@@ -223,7 +224,6 @@
               </goals>
               <configuration>
                 <append>false</append>
-                <destFile>${project.build.directory}/IT-coverage.jacoco</destFile>
                 <propertyName>failsafe.jacoco.args</propertyName>
               </configuration>
             </execution>
@@ -233,10 +233,6 @@
               <goals>
                 <goal>report-integration</goal>
               </goals>
-              <configuration>
-                <dataFile>${project.build.directory}/IT-coverage.jacoco</dataFile>
-                <outputDirectory>${project.reporting.outputDirectory}/jacoco-it</outputDirectory>
-              </configuration>
             </execution>
             <execution>
               <id>check-UT-coverage</id>
@@ -259,7 +255,6 @@
                     </limits>
                   </rule>
                 </rules>
-                <dataFile>${project.build.directory}/UT-coverage.jacoco</dataFile>
               </configuration>
             </execution>
             <execution>
@@ -283,7 +278,6 @@
                     </limits>
                   </rule>
                 </rules>
-                <dataFile>${project.build.directory}/IT-coverage.jacoco</dataFile>
               </configuration>
             </execution>
           </executions>
@@ -291,24 +285,6 @@
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
           <version>3.3.0</version>
-          <executions>
-            <execution>
-              <phase>install</phase>
-              <goals>
-                <goal>single</goal>
-              </goals>
-            </execution>
-          </executions>
-          <configuration>
-            <archive>
-              <manifest>
-                <mainClass>ch.sebpiller.epg.scrapper.ScrapperCli</mainClass>
-              </manifest>
-            </archive>
-            <descriptorRefs>
-              <descriptorRef>jar-with-dependencies</descriptorRef>
-            </descriptorRefs>
-          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
@@ -392,22 +368,25 @@
           </configuration>
         </plugin>
         <plugin>
-          <artifactId>maven-site-plugin</artifactId>
-          <version>3.9.1</version>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>3.2.1</version>
           <executions>
             <execution>
-              <id>build-site</id>
+              <id>build-sources-jar</id>
+              <phase>site</phase>
               <goals>
-                <goal>site</goal>
+                <goal>jar-no-fork</goal>
+                <goal>test-jar-no-fork</goal>
               </goals>
-            </execution>
-            <execution>
-              <id>pack-site</id>
-              <goals>
-                <goal>jar</goal>
-              </goals>
+              <configuration>
+                <attach>true</attach>
+              </configuration>
             </execution>
           </executions>
+        </plugin>
+        <plugin>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.9.1</version>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -468,6 +447,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>${checkstyle-plugin.version}</version>
         <reportSets>
           <reportSet>
             <reports>
@@ -508,28 +488,14 @@
           <reportSet>
             <reports>
               <report>report</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-        <configuration>
-          <append>false</append>
-          <dataFile>${project.build.directory}/UT-coverage.jacoco</dataFile>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.jacoco</groupId>
-        <artifactId>jacoco-maven-plugin</artifactId>
-        <reportSets>
-          <reportSet>
-            <reports>
               <report>report-integration</report>
             </reports>
           </reportSet>
         </reportSets>
-        <configuration>
-          <append>false</append>
-          <dataFile>${project.build.directory}/IT-coverage.jacoco</dataFile>
-        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jxr-plugin</artifactId>
+        <version>3.0.0</version>
       </plugin>
     </plugins>
   </reporting>

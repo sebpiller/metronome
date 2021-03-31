@@ -18,6 +18,8 @@
         <modifier>-SNAPSHOT</modifier><!-- replace with blank for a release deploy -->
         <dynamicVersion>${branch}${feature}${revision}${modifier}</dynamicVersion>
 
+        <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
@@ -213,14 +215,9 @@
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${checkstyle-plugin.version}</version>
                     <configuration>
-                        <configLocation>checkstyle_custom.xml</configLocation>
+                        <configLocation>${project.basedir}/checkstyle_custom.xml</configLocation>
                     </configuration>
                     <dependencies>
-                        <dependency>
-                            <groupId>ch.sebpiller.iot.smartlamp</groupId>
-                            <artifactId>build-tools</artifactId>
-                            <version>${project.version}</version>
-                        </dependency>
                         <dependency>
                             <groupId>com.puppycrawl.tools</groupId>
                             <artifactId>checkstyle</artifactId>
