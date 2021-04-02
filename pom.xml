@@ -3,7 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ch.sebpiller.metronome</groupId>
+    <groupId>ch.sebpiller.tools.metronome</groupId>
     <artifactId>metronome</artifactId>
     <version>${dynamicVersion}</version>
 
@@ -13,18 +13,25 @@
     <properties>
         <!-- RELEASE PIPELINE VERSION -->
         <mainVersion>0.0.0</mainVersion><!-- default version information, if no more specific information is available -->
-        <feature /> <!-- the feature name for feature branches build -->
-        <buildNumber /><!-- will be assigned by Jenkins -->
+        <feature/> <!-- the feature name for feature branches build -->
+        <buildNumber/><!-- will be assigned by Jenkins -->
         <modifier>-SNAPSHOT</modifier><!-- replaced with blank for a release deploy -->
         <dynamicVersion>${mainVersion}${feature}${buildNumber}${modifier}</dynamicVersion>
 
         <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
+
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
+
+        <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+
         <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
         <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
+
+        <stg.site.url>file://~/maven-sites/${project.groupId}/${project.artifactId}</stg.site.url>
 
         <timestamp>${maven.build.timestamp}</timestamp>
         <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ssZ</maven.build.timestamp.format>
@@ -35,7 +42,7 @@
         <skipITs>false</skipITs>
         <failsafe.jacoco.args/>
 
-        <jacoco.mincoverage>0%</jacoco.mincoverage>
+        <jacoco.mincoverage>30%</jacoco.mincoverage>
         <failIfNoTests>true</failIfNoTests>
     </properties>
 
@@ -51,8 +58,7 @@
                 <role>developer</role>
             </roles>
             <properties>
-                <picUrl>https://fr.gravatar.com/userimage/203993716/6f8cf03f83f3f97a2e7b67834061a745.jpg?size=200
-                </picUrl>
+                <picUrl>https://secure.gravatar.com/avatar/1131a05197d9774ab57163dae2bfb5f1</picUrl>
             </properties>
         </developer>
     </developers>
@@ -63,6 +69,15 @@
         <developerConnection>scm:git:http://git.home/spiller/metronome.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
+
+    <url>${stg.site.url}</url>
+    <distributionManagement>
+        <!-- only for site:stage to be happy -->
+        <site>
+            <id>${project.artifactId}-site</id>
+            <url>${stg.site.url}</url>
+        </site>
+    </distributionManagement>
 
     <issueManagement>
         <system>Gitea</system>
@@ -247,9 +262,6 @@
                             <goals>
                                 <goal>report</goal>
                             </goals>
-                            <!--<configuration>
-                                <outputDirectory>${project.reporting.outputDirectory}/jacoco-ut</outputDirectory>
-                            </configuration>-->
                         </execution>
 
                         <!-- Failsafe -->
@@ -270,9 +282,6 @@
                             <goals>
                                 <goal>report-integration</goal>
                             </goals>
-                            <!--<configuration>
-                                <outputDirectory>${project.reporting.outputDirectory}/jacoco-it</outputDirectory>
-                            </configuration>-->
                         </execution>
 
                         <!-- Code coverage threshold -->
