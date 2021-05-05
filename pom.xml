@@ -43,7 +43,7 @@
         <failsafe.jacoco.args/>
 
         <jacoco.mincoverage>30%</jacoco.mincoverage>
-        <failIfNoTests>true</failIfNoTests>
+        <failIfNoTests>false</failIfNoTests>
 
         <kotlin.version>1.4.32</kotlin.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
