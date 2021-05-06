@@ -12,15 +12,14 @@
 
     <properties>
         <!-- RELEASE PIPELINE VERSION -->
-        <mainVersion>0.0.0</mainVersion><!-- default version information, if no more specific information is available -->
+        <mainVersion>0.0.0
+        </mainVersion><!-- default version information, if no more specific information is available -->
         <feature/> <!-- the feature name for feature branches build -->
         <buildNumber/><!-- will be assigned by Jenkins -->
         <modifier>-SNAPSHOT</modifier><!-- replaced with blank for a release deploy -->
         <dynamicVersion>${mainVersion}${feature}${buildNumber}${modifier}</dynamicVersion>
 
         <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
-
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
@@ -370,18 +369,22 @@
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.8.1</version>
-                    <executions>
-                        <!-- Replacing default-compile as it is treated specially by maven -->
-                        <execution>
-                            <id>default-compile</id>
-                            <phase>none</phase>
-                        </execution>
-                        <!-- Replacing default-testCompile as it is treated specially by maven -->
-                        <execution>
-                            <id>default-testCompile</id>
-                            <phase>none</phase>
-                        </execution>
-                    </executions>
+                    <configuration>
+                        <fork>true</fork>
+                        <executable>javac</executable>
+                    </configuration>
+                    <!--                    <executions>-->
+                    <!--                        &lt;!&ndash; Replacing default-compile as it is treated specially by maven &ndash;&gt;-->
+                    <!--                        <execution>-->
+                    <!--                            <id>default-compile</id>-->
+                    <!--                            <phase>none</phase>-->
+                    <!--                        </execution>-->
+                    <!--                        &lt;!&ndash; Replacing default-testCompile as it is treated specially by maven &ndash;&gt;-->
+                    <!--                        <execution>-->
+                    <!--                            <id>default-testCompile</id>-->
+                    <!--                            <phase>none</phase>-->
+                    <!--                        </execution>-->
+                    <!--                    </executions>-->
                 </plugin>
 
                 <plugin>
@@ -531,6 +534,9 @@
                 <plugin>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>3.9.1</version>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>

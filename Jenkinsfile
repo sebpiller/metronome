@@ -127,7 +127,7 @@ pipeline
                                             {
                                                 script
                                                         {
-                                                            sh 'mvn --batch-mode package -DskipUTs -DskipITs ${MAVEN_ARGS} -X'
+                                                            sh 'mvn --batch-mode package -DskipUTs -DskipITs ${MAVEN_ARGS}'
                                                         }
                                             }
                                 }
