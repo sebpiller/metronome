@@ -2,11 +2,12 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>ch.sebpiller.metronome</groupId>
+  <groupId>ch.sebpiller.tools.metronome</groupId>
   <artifactId>metronome</artifactId>
-  <version>999-SNAPSHOT</version>
+  <version>0.0.0-SNAPSHOT</version>
   <name>Metronome</name>
   <description>Produces beat at a constant and precise rate.</description>
+  <url>${stg.site.url}</url>
   <developers>
     <developer>
       <id>sebpiller</id>
@@ -19,7 +20,7 @@
       </roles>
       <timezone>+1</timezone>
       <properties>
-        <picUrl>https://fr.gravatar.com/userimage/203993716/6f8cf03f83f3f97a2e7b67834061a745.jpg?size=200</picUrl>
+        <picUrl>https://secure.gravatar.com/avatar/1131a05197d9774ab57163dae2bfb5f1</picUrl>
       </properties>
     </developer>
   </developers>
@@ -32,25 +33,35 @@
     <system>Gitea</system>
     <url>http://git.home/spiller/metronome/issues</url>
   </issueManagement>
+  <distributionManagement>
+    <site>
+      <id>${project.artifactId}-site</id>
+      <url>${stg.site.url}</url>
+    </site>
+  </distributionManagement>
   <properties>
     <checkstyle-plugin.version>3.1.2</checkstyle-plugin.version>
     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-    <maven.compiler.source>1.8</maven.compiler.source>
+    <stg.site.url>file://~/maven-sites/${project.groupId}/${project.artifactId}</stg.site.url>
+    <kotlin.version>1.4.32</kotlin.version>
+    <maven.compiler.source>8</maven.compiler.source>
     <modifier>-SNAPSHOT</modifier>
     <maven.javadoc.failOnError>false</maven.javadoc.failOnError>
     <surefire.jacoco.args></surefire.jacoco.args>
+    <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+    <mainVersion>0.0.0</mainVersion>
     <skipUTs>false</skipUTs>
-    <branch>999</branch>
-    <failIfNoTests>true</failIfNoTests>
+    <buildNumber></buildNumber>
+    <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
+    <failIfNoTests>false</failIfNoTests>
     <failsafe.jacoco.args></failsafe.jacoco.args>
-    <revision></revision>
     <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
     <feature></feature>
     <maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ssZ</maven.build.timestamp.format>
     <skipITs>false</skipITs>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <jacoco.mincoverage>0%</jacoco.mincoverage>
-    <dynamicVersion>branchfeaturemodifier</dynamicVersion>
+    <jacoco.mincoverage>30%</jacoco.mincoverage>
+    <dynamicVersion>${mainVersion}${feature}${buildNumber}${modifier}</dynamicVersion>
     <timestamp>${maven.build.timestamp}</timestamp>
   </properties>
   <dependencies>
@@ -293,6 +304,53 @@
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.8.1</version>
+          <configuration>
+            <fork>true</fork>
+            <executable>javac</executable>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.jetbrains.kotlin</groupId>
+          <artifactId>kotlin-maven-plugin</artifactId>
+          <version>${kotlin.version}</version>
+          <executions>
+            <execution>
+              <id>compile</id>
+              <goals>
+                <goal>compile</goal>
+              </goals>
+              <configuration>
+                <sourceDirs>
+                  <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                  <sourceDir>${project.basedir}/src/main/java</sourceDir>
+                </sourceDirs>
+              </configuration>
+            </execution>
+            <execution>
+              <id>test-compile</id>
+              <goals>
+                <goal>test-compile</goal>
+              </goals>
+              <configuration>
+                <sourceDirs>
+                  <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+                  <sourceDir>${project.basedir}/src/test/java</sourceDir>
+                </sourceDirs>
+              </configuration>
+            </execution>
+            <execution>
+              <id>integration-test-compile</id>
+              <goals>
+                <goal>test-compile</goal>
+              </goals>
+              <configuration>
+                <sourceDirs>
+                  <sourceDir>${project.basedir}/src/it/kotlin</sourceDir>
+                  <sourceDir>${project.basedir}/src/it/java</sourceDir>
+                </sourceDirs>
+              </configuration>
+            </execution>
+          </executions>
         </plugin>
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
@@ -387,6 +445,9 @@
         <plugin>
           <artifactId>maven-site-plugin</artifactId>
           <version>3.9.1</version>
+          <configuration>
+            <skip>true</skip>
+          </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
